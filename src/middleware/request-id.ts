@@ -1,8 +1,7 @@
 import { createMiddleware } from 'hono/factory'
-import { randomUUID } from 'node:crypto'
 
 export const requestId = createMiddleware(async (c, next) => {
-  const id = c.req.header('x-request-id') ?? randomUUID()
+  const id = c.req.header('x-request-id') ?? crypto.randomUUID()
   c.set('requestId', id)
   await next()
   c.header('X-Request-Id', id)

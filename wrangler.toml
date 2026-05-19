@@ -1,0 +1,12 @@
+name = "bidph-api"
+main = "src/worker.ts"
+compatibility_date = "2026-01-01"
+
+[dev]
+port = 3001
+
+[vars]
+NODE_ENV = "production"
+
+# Secrets (wrangler secret put): SUPABASE_SECRET_KEY, PAYMONGO_WEBHOOK_SECRET, CRON_SECRET
+# Non-secret production values: set CORS_ORIGIN and SUPABASE_URL via [vars] or dashboard.

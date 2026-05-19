@@ -4,5 +4,7 @@ dist
 .env
 .env.local
 .env.*.local
+.dev.vars
+.wrangler
 supabase/.branches
 supabase/.temp

@@ -1,5 +1,5 @@
 import { createMiddleware } from 'hono/factory'
-import { createHmac, timingSafeEqual } from 'node:crypto'
+import { hmacSha256Hex, timingSafeEqualString } from '../lib/crypto.js'
 import type { Env } from '../env.js'
 
 export function verifyPaymongoSignature(config: Env) {
@@ -16,12 +16,10 @@ export function verifyPaymongoSignature(config: Env) {
     }
 
     const rawBody = await c.req.raw.clone().text()
-    const expected = createHmac('sha256', secret).update(rawBody).digest('hex')
-
+    const expected = await hmacSha256Hex(secret, rawBody)
     const provided = signature.replace(/^sha256=/, '')
-    const a = Buffer.from(expected, 'hex')
-    const b = Buffer.from(provided, 'hex')
-    if (a.length !== b.length || !timingSafeEqual(a, b)) {
+
+    if (!timingSafeEqualString(expected, provided)) {
       return c.json({ error: { code: 'UNAUTHORIZED', message: 'Invalid webhook signature' } }, 401)
     }
 

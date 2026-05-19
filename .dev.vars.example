@@ -1,0 +1,5 @@
+# Copy to .dev.vars for `pnpm dev:worker` (wrangler dev). Not committed.
+SUPABASE_URL=http://127.0.0.1:54321
+SUPABASE_SECRET_KEY=
+CORS_ORIGIN=http://localhost:3000
+PAYMONGO_WEBHOOK_SECRET=

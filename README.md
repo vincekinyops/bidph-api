@@ -66,9 +66,18 @@ bidph-api/
 
 ### API server (Hono)
 
+**Node (local):**
+
 ```bash
 cp .env.example .env   # fill SUPABASE_URL + SUPABASE_SECRET_KEY from pnpm db:env
 pnpm dev               # http://localhost:3001
+```
+
+**Cloudflare Worker (local, matches production runtime):**
+
+```bash
+cp .dev.vars.example .dev.vars   # same keys as .env
+pnpm dev:worker                  # http://localhost:3001
 ```
 
 | Endpoint | Description |
@@ -90,9 +99,22 @@ See [spec-v1-plan2.md](../docs/spec-v1-plan2.md) for the full roadmap.
 | `pnpm db:push` | Push migrations to linked remote project |
 | `pnpm db:seed-items` | Insert demo auctions (local) |
 | `pnpm db:seed-items:remote` | Demo auctions on linked project |
+| `pnpm dev:worker` | Local API on Cloudflare Workers runtime |
+| `pnpm deploy` | Deploy API to Cloudflare Workers |
 
 ## Production
 
 - Deploy schema with `pnpm db:push` from this repo (linked project).
 - Never run `db:reset` on production.
 - Service role, `DATABASE_URL`, PayMongo secrets belong here only.
+
+### Cloudflare Workers
+
+1. Log in: `pnpm wrangler login`
+2. Set non-secret vars in `wrangler.toml` or the dashboard: `SUPABASE_URL`, `CORS_ORIGIN` (production web URL).
+3. Set secrets: `pnpm wrangler secret put SUPABASE_SECRET_KEY` (and `PAYMONGO_WEBHOOK_SECRET` when using webhooks).
+4. Deploy: `pnpm deploy`
+
+PayMongo webhook URL: `https://<your-worker>.workers.dev/api/v1/webhooks/paymongo`
+
+Node (`pnpm dev`) remains available for quick local iteration; `pnpm dev:worker` uses the same Hono app on the Workers runtime.
