@@ -110,10 +110,27 @@ See [spec-v1-plan2.md](../docs/spec-v1-plan2.md) for the full roadmap.
 
 ### Cloudflare Workers
 
+**Manual deploy**
+
 1. Log in: `pnpm wrangler login`
-2. Set non-secret vars in `wrangler.toml` or the dashboard: `SUPABASE_URL`, `CORS_ORIGIN` (production web URL).
-3. Set secrets: `pnpm wrangler secret put SUPABASE_SECRET_KEY` (and `PAYMONGO_WEBHOOK_SECRET` when using webhooks).
-4. Deploy: `pnpm deploy`
+2. Set bindings: `pnpm wrangler secret put SUPABASE_URL` (and `CORS_ORIGIN`, `SUPABASE_SECRET_KEY`, etc.)
+3. Deploy: `pnpm deploy`
+
+**CI deploy (push to `main`)**
+
+GitHub Actions workflow: [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml). On every push to `main`, it runs `pnpm typecheck` then `wrangler deploy`.
+
+Add these **repository secrets** in GitHub (Settings → Secrets and variables → Actions):
+
+| Secret | Description |
+|--------|-------------|
+| `CLOUDFLARE_API_TOKEN` | [API token](https://dash.cloudflare.com/profile/api-tokens) with **Workers Scripts → Edit** |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID (dashboard sidebar) |
+| `SUPABASE_URL` | Production project URL, e.g. `https://<ref>.supabase.co` |
+| `SUPABASE_SECRET_KEY` | Service role / secret key (`sb_secret_...`) |
+| `CORS_ORIGIN` | Production web app URL |
+| `PAYMONGO_WEBHOOK_SECRET` | Optional — set via `pnpm wrangler secret put` if not in GitHub |
+| `CRON_SECRET` | Optional — same as above |
 
 PayMongo webhook URL: `https://<your-worker>.workers.dev/api/v1/webhooks/paymongo`
 
