@@ -7,6 +7,7 @@ import { errorHandler } from './middleware/error-handler.js'
 import { requestId } from './middleware/request-id.js'
 import { requireAuth } from './middleware/auth.js'
 import { verifyPaymongoSignature } from './middleware/paymongo.js'
+import { healthRoutes } from './routes/health.js'
 import { meRoutes } from './routes/v1/me.js'
 import { paymongoWebhookRoutes } from './routes/v1/webhooks/paymongo.js'
 
@@ -32,9 +33,7 @@ export function createApp(config: Env) {
 
   app.onError(errorHandler)
 
-  app.get('/health', (c) =>
-    c.json({ ok: true, service: 'bidph-api', requestId: c.get('requestId') }),
-  )
+  app.route('/health', healthRoutes)
 
   const paymongo = paymongoWebhookRoutes(config)
   paymongo.use('*', verifyPaymongoSignature(config))

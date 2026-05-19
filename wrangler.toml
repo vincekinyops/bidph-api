@@ -15,5 +15,5 @@ enabled = true
 enabled = true
 invocation_logs = true
 
-# Secrets (wrangler secret put): SUPABASE_SECRET_KEY, PAYMONGO_WEBHOOK_SECRET, CRON_SECRET
-# Non-secret production values: set CORS_ORIGIN and SUPABASE_URL via [vars] or dashboard.
+# Production: push to main — GitHub Actions sets bindings (see README).
+# Local worker dev: copy .dev.vars.example → .dev.vars

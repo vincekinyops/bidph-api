@@ -100,7 +100,6 @@ See [spec-v1-plan2.md](../docs/spec-v1-plan2.md) for the full roadmap.
 | `pnpm db:seed-items` | Insert demo auctions (local) |
 | `pnpm db:seed-items:remote` | Demo auctions on linked project |
 | `pnpm dev:worker` | Local API on Cloudflare Workers runtime |
-| `pnpm deploy` | Deploy API to Cloudflare Workers |
 
 ## Production
 
@@ -108,19 +107,11 @@ See [spec-v1-plan2.md](../docs/spec-v1-plan2.md) for the full roadmap.
 - Never run `db:reset` on production.
 - Service role, `DATABASE_URL`, PayMongo secrets belong here only.
 
-### Cloudflare Workers
+### Cloudflare Workers (CI only)
 
-**Manual deploy**
+Deploys run automatically on push to `main` via [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml) (`pnpm typecheck`, then `wrangler deploy`). You can also re-run from the Actions tab (**Deploy Worker** → **Run workflow**).
 
-1. Log in: `pnpm wrangler login`
-2. Set bindings: `pnpm wrangler secret put SUPABASE_URL` (and `CORS_ORIGIN`, `SUPABASE_SECRET_KEY`, etc.)
-3. Deploy: `pnpm deploy`
-
-**CI deploy (push to `main`)**
-
-GitHub Actions workflow: [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml). On every push to `main`, it runs `pnpm typecheck` then `wrangler deploy`.
-
-Add these **repository secrets** in GitHub (Settings → Secrets and variables → Actions):
+**One-time setup:** add these **repository secrets** in GitHub (Settings → Secrets and variables → Actions):
 
 | Secret | Description |
 |--------|-------------|
@@ -129,8 +120,10 @@ Add these **repository secrets** in GitHub (Settings → Secrets and variables �
 | `SUPABASE_URL` | Production project URL, e.g. `https://<ref>.supabase.co` |
 | `SUPABASE_SECRET_KEY` | Service role / secret key (`sb_secret_...`) |
 | `CORS_ORIGIN` | Production web app URL |
-| `PAYMONGO_WEBHOOK_SECRET` | Optional — set via `pnpm wrangler secret put` if not in GitHub |
-| `CRON_SECRET` | Optional — same as above |
+| `PAYMONGO_WEBHOOK_SECRET` | Optional — omit until PayMongo webhooks are wired |
+| `CRON_SECRET` | Optional — omit until cron routes are used |
+
+CI uploads secrets to Cloudflare on each deploy; you do not need `wrangler login` or `wrangler secret put` locally.
 
 PayMongo webhook URL: `https://<your-worker>.workers.dev/api/v1/webhooks/paymongo`
 

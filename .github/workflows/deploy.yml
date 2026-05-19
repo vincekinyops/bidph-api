@@ -1,10 +1,28 @@
+# Deploy Worker (GitHub Actions → Cloudflare)
+#
+# STATUS: DISABLED — deploys use Cloudflare "Connect to Git" in the dashboard.
+#
+# To re-enable this workflow:
+#   1. Uncomment the `on:` block below (push / pull_request / workflow_dispatch).
+#   2. Delete or comment out the stub `on: workflow_dispatch` under "DISABLED stub".
+#   3. Remove `if: false` from the `ci` and `deploy` jobs.
+#
+# Optional: disable in GitHub UI without editing this file:
+#   Actions → Deploy Worker → ⋯ → Disable workflow
+
 name: Deploy Worker
 
+# --- Active triggers (uncomment to re-enable) ---
+# on:
+#   push:
+#     branches: [main]
+#   pull_request:
+#     branches: [main]
+#   workflow_dispatch:
+
+# DISABLED stub: keeps the file valid for GitHub; jobs below do not run (`if: false`).
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: bidph-api-${{ github.workflow }}-${{ github.ref }}
@@ -12,6 +30,7 @@ concurrency:
 
 jobs:
   ci:
+    if: false # DISABLED — remove when re-enabling triggers above
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,8 +48,8 @@ jobs:
       - run: pnpm typecheck
 
   deploy:
+    if: false # DISABLED — was: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     needs: ci
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -49,17 +68,33 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Verify GitHub secrets
+        run: |
+          missing=()
+          for name in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID SUPABASE_URL CORS_ORIGIN SUPABASE_SECRET_KEY; do
+            if [ -z "${!name}" ]; then
+              missing+=("$name")
+            fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Add these repository secrets (Settings → Secrets and variables → Actions): ${missing[*]}"
+            exit 1
+          fi
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy
+          packageManager: pnpm
+          command: deploy --var SUPABASE_URL:${{ secrets.SUPABASE_URL }} --var CORS_ORIGIN:${{ secrets.CORS_ORIGIN }}
           secrets: |
-            SUPABASE_URL
-            CORS_ORIGIN
             SUPABASE_SECRET_KEY
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
